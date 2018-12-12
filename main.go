@@ -1,9 +1,12 @@
-package distributed_object_storage
+package main
+
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"os"
+
+    "github.com/sufeitelecom/distributed-object-storage/objects"
 	"net/http"
+	"os"
+	log "github.com/sirupsen/logrus"
 )
 
 const 	Listen = ":12345"
@@ -15,6 +18,6 @@ func initLog()  {
 
 func main() {
 	initLog()
-	http.HandleFunc("/objects/",objects.Handler())
+	http.HandleFunc("/objects/",objects.Handler)
 	log.Fatal(http.ListenAndServe(Listen,nil))
 }

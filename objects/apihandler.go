@@ -84,7 +84,9 @@ func apiget(w http.ResponseWriter,r *http.Request)  {
 			return
 		}
 	}
-	meta, e := es.GetMatadata(name, version)
+	//log.Infof("get version is %d,name is %s",version,name)
+	meta, e := es.GetMetadata(name, version)
+	//log.Infof("get meta is %v",meta)
 	if e != nil {
 		log.Println(e)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -94,6 +96,7 @@ func apiget(w http.ResponseWriter,r *http.Request)  {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+
 	object := url.PathEscape(meta.Hash)
 	stream, e := getstream(object)
 	if e != nil {

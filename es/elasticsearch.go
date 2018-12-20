@@ -84,7 +84,7 @@ func SearchLatestVersion(name string) (meta Metadata,err error)  {
 	return
 }
 
-func GetMatadata(name string,version int) (Metadata,error)  {
+func GetMetadata(name string,version int) (Metadata,error)  {
 	if version == 0{
 		return SearchLatestVersion(name)
 	}

@@ -27,7 +27,7 @@ func main()  {
 	*/
 	http.HandleFunc("/objects/",objects.ApiHandler)
 	http.HandleFunc("/locate/",locate.Handler)
-	http.HandleFunc("/versions",version.Handler)
+	http.HandleFunc("/versions/",version.Handler)
 	/*
 	http.ListenAndServe开始监听,监听端口由环境变量指定，这样方便同一台机器启动多个数据服务
 	*/

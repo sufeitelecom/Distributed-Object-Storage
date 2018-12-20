@@ -22,7 +22,7 @@ func TestPutAndGetMatadata(t *testing.T) {
 	}
 
 	time.Sleep(2*time.Second)
-	now,err := GetMatadata(ori.Name,0)
+	now,err := GetMetadata(ori.Name,0)
 	if err != nil{
 		t.Errorf("get meta fail %v",err)
 		return
@@ -36,7 +36,7 @@ func TestPutAndGetMatadata(t *testing.T) {
 
 	DelMetadata(now.Name,now.Version)
 	time.Sleep(2*time.Second)
-	now2,err := GetMatadata(ori.Name,0)
+	now2,err := GetMetadata(ori.Name,0)
 	t.Logf("[删除后]原始元数据为 : %v,读取的元数据为：%v.",ori,now2)
 
 	return

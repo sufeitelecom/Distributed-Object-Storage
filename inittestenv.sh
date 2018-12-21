@@ -3,6 +3,7 @@
 for i in `seq 1 3`
 do
     mkdir -p /tmp/$i/objects
+    mkdir -p /tmp/$i/temp
 done
 
 sudo ifconfig ens33:1 10.29.1.1/16

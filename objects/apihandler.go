@@ -52,7 +52,8 @@ func apiput(w http.ResponseWriter,r *http.Request)  {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	c,err := storeobject(r.Body,url.PathEscape(hash))
+	size := tools.GetSizeFromHeader(r.Header)
+	c,err := storeobject(r.Body,url.PathEscape(hash),size)
 	if err != nil{
 		log.Errorf("store object error %v",err)
 		w.WriteHeader(c)
@@ -63,7 +64,7 @@ func apiput(w http.ResponseWriter,r *http.Request)  {
 		return
 	}
 	name := strings.Split(r.URL.EscapedPath(),"/")[2]
-	size := tools.GetSizeFromHeader(r.Header)
+
 	err = es.AddVersion(name,hash,size)
 	if err != nil {
 		log.Errorf("es.AddVersion error %v", err)
@@ -107,26 +108,31 @@ func apiget(w http.ResponseWriter,r *http.Request)  {
 	io.Copy(w, stream)
 }
 
-func storeobject(r io.Reader,object string) (int,error) {
-	stream,err := putstream(object)
-	if err != nil{
-		return http.StatusServiceUnavailable,err
+func storeobject(r io.Reader,hash string,size int64) (int,error) {
+	if locate.Exist(url.PathEscape(hash)) {
+		return http.StatusOK,nil
 	}
-
-	io.Copy(stream,r)
-	err = stream.Close()
+	stream,err := putstream(url.PathEscape(hash),size)
 	if err != nil{
 		return http.StatusInternalServerError,err
 	}
+
+	reader := io.TeeReader(r,stream)
+	d := tools.CalculateHash(reader)
+	if d != hash{
+		stream.Commit(false)
+		return  http.StatusBadRequest,fmt.Errorf("object hash mismatch, calculated=%s,request=%s",d,hash)
+	}
+	stream.Commit(true)
 	return http.StatusOK,nil
 }
 
-func putstream(object string) (*objectstream.PutStream,error)  {
+func putstream(hash string,size int64) (*objectstream.PutStream,error)  {
 	server := heartbeat.ChooseRandomServer()
 	if server == ""{
 		return nil,fmt.Errorf("cannot find any servers")
 	}
-	return objectstream.NewPutStream(server,object),nil
+	return objectstream.NewPutStream(server,hash,size)
 }
 
 func getstream(object string)  (*objectstream.GetStream,error) {

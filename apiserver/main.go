@@ -48,4 +48,8 @@ func checkEnv()  {
 	if str == ""{
 		log.Fatalf("please set environment variables RABBITMQ_SERVER")
 	}
+	str = os.Getenv("ES_SERVER")
+	if str == ""{
+		log.Fatalf("please set environment variables ES_SERVER")
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"github.com/sufeitelecom/distributed-object-storage/objects"
 	"github.com/sufeitelecom/distributed-object-storage/locate"
+	"github.com/sufeitelecom/distributed-object-storage/temp"
 )
 
 
@@ -17,6 +18,7 @@ func main()  {
 	initLog()
 	checkEnv()
 
+	locate.CollectObject()
 
 	//开启一个线程完成上报心跳以及服务发现
 	go heartbeat.Startheartbeat()
@@ -29,6 +31,7 @@ func main()  {
 	那么将由objects.Handler函数处理
 	*/
 	http.HandleFunc("/objects/",objects.DataHandler)
+	http.HandleFunc("/temp/",temp.Handler)
 
 	/*
 	http.ListenAndServe开始监听,监听端口由环境变量指定，这样方便同一台机器启动多个数据服务

@@ -1,38 +1,58 @@
 package objectstream
 
 import (
-	"io"
 	"net/http"
 	"fmt"
+	"io/ioutil"
+	"strings"
 )
 
 type PutStream struct {
-	write *io.PipeWriter
-	c chan error
+	Server string
+	Uuid string
 }
 
-func NewPutStream(server string,object string) *PutStream {
-	readio,writeio := io.Pipe()
-	c := make(chan error)
-
-	go func() {
-		request,_ := http.NewRequest("PUT","http://"+server+"/objects/"+object,readio)
-		client := http.Client{}
-		r,err := client.Do(request)
-		if err == nil && r.StatusCode != http.StatusOK{
-			err = fmt.Errorf("dataserver return http code %d",err)
-		}
-		c <- err
-	}()
-	return &PutStream{writeio,c}
+func NewPutStream(server string,hash string,size int64) (*PutStream , error) {
+	request,e := http.NewRequest("POST","http://"+server+"/temp/"+hash,nil)
+	if e != nil{
+		return nil,e
+	}
+	request.Header.Set("size",fmt.Sprintf("%d",size))
+	client := http.Client{}
+	response,e := client.Do(request)
+	if e != nil{
+		return nil,e
+	}
+	uuid,e := ioutil.ReadAll(response.Body)
+	if e != nil{
+		return nil,e
+	}
+	return &PutStream{Server:server,Uuid:string(uuid)},nil
 }
 
 func (w *PutStream)Write(p []byte) (n int,err error)  {
-	return w.write.Write(p)
+	request,e := http.NewRequest("PATCH","http://"+w.Server+"/temp/"+w.Uuid,strings.NewReader(string(p)))
+	if e != nil{
+		return 0,e
+	}
+	client := http.Client{}
+	r,e := client.Do(request)
+	if e != nil{
+		return  0,e
+	}
+	if r.StatusCode != http.StatusOK{
+		return 0,fmt.Errorf("dataserver return http code %d",r.StatusCode)
+	}
+	return len(p),nil
 }
 
-//调用关闭，是为了让管道另一端的reader能收到io.EOF,否则在goroutine中运行的client.Do(request)始终阻塞无法返回
-func (w * PutStream)Close() error {
-	w.write.Close()
-	return <-w.c
+func (w *PutStream)Commit(good bool)  {
+	methed := "DELETE"
+	if good {
+		methed = "PUT"
+	}
+	request,_:= http.NewRequest(methed,"http://"+w.Server+"/temp/"+w.Uuid,nil)
+	client := http.Client{}
+	client.Do(request)
 }
+

@@ -22,7 +22,7 @@ Response uuid
  */
 func post(w http.ResponseWriter,r *http.Request) {
 	output, _ := exec.Command("dbus-uuidgen").Output()
-	uuid := strings.TrimPrefix(string(output), "\n")
+	uuid := strings.TrimSuffix(string(output), "\n")  //注意生成的uuid包含\n后缀，而在url中该字符别翻译为%OA,造成无法删除临时问题
 	name := strings.Split(r.URL.EscapedPath(), "/")[2]
 	size, e := strconv.ParseInt(r.Header.Get("size"), 0, 64)
 	if e != nil{
